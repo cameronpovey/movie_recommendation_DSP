@@ -1,0 +1,6 @@
+package com.example.recommendation_dsp
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity: FlutterActivity() {
+}
