@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:recommendation_dsp/firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -19,8 +20,7 @@ Future<bool> checkNew() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   bool isNew = await checkNew();
   isNew = false;
