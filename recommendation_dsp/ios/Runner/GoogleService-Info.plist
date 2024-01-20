@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>616451049757-stf5ppsrvn5u1hocdflsckujrjrukk05.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.616451049757-stf5ppsrvn5u1hocdflsckujrjrukk05</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBkPb3mqlBEDfh9KHH_TEBRLI95knnrZfY</string>
+	<key>GCM_SENDER_ID</key>
+	<string>616451049757</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.recommendationDsp</string>
+	<key>PROJECT_ID</key>
+	<string>cohesive-memory-342803</string>
+	<key>STORAGE_BUCKET</key>
+	<string>cohesive-memory-342803.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:616451049757:ios:96772be2357a9187d7b9f4</string>
+	<key>DATABASE_URL</key>
+	<string>https://cohesive-memory-342803-default-rtdb.europe-west1.firebasedatabase.app</string>
+</dict>
+</plist>

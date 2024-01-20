@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "616451049757",
+    "firebase_url": "https://cohesive-memory-342803-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "cohesive-memory-342803",
+    "storage_bucket": "cohesive-memory-342803.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:616451049757:android:f5d70ad4ef3a415dd7b9f4",
+        "android_client_info": {
+          "package_name": "com.example.recommendation_dsp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "616451049757-difcjo2ief6kss94qctgg4di07pgr55f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_v_tpNzTifWA42oK3mL82JOiHFmnGmco"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "616451049757-difcjo2ief6kss94qctgg4di07pgr55f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
