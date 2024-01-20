@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:recommendation_dsp/firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'Screens/welcome.dart';
 import 'Screens/home.dart';
@@ -18,6 +20,7 @@ Future<bool> checkNew() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   bool isNew = await checkNew();
   isNew = false;
@@ -34,7 +37,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'DSP RECOMMENDATIONS',
       theme: ThemeData(
         appBarTheme: const AppBarTheme(
           backgroundColor: Color.fromARGB(

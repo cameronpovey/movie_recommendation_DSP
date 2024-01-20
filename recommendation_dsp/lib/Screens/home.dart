@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:recommendation_dsp/Functions/amendRec.dart';
 import 'package:recommendation_dsp/Functions/getRec.dart';
+import 'package:recommendation_dsp/Screens/ratings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -14,13 +15,19 @@ class BlankScreen extends StatefulWidget {
 class _BlankScreenState extends State<BlankScreen> {
   GetData connect = GetData();
   editRec feedback = editRec();
-  late List<Map<dynamic, dynamic>> movies;
+  Map<dynamic, dynamic> movies = {};
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    movies = connect.getRecs();
+    fetchData();
+  }
+
+  fetchData() async {
+    var response = await connect.getRecs();
+    setState(() {
+      movies = response;
+    });
   }
 
   @override
@@ -29,10 +36,21 @@ class _BlankScreenState extends State<BlankScreen> {
       appBar: AppBar(
         centerTitle: true,
         title: const Text("Movie Recommendations"),
+        leading: IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ShowRatings(),
+                ),
+              );
+              fetchData();
+            },
+            icon: Icon(Icons.star_border)),
       ),
-      body: Column(
+      body: ListView(
         children: [
-          for (var movie in movies) ...[
+          for (var movie in movies.keys) ...[
             Row(
               children: [
                 Expanded(
@@ -44,23 +62,33 @@ class _BlankScreenState extends State<BlankScreen> {
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(movie['Name']),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(movie['Release']),
-                                  ],
-                                )
-                              ],
-                            ),
-                            const Expanded(
-                              child: SizedBox(),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          movies[movie]['title'],
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(DateTime.parse(
+                                                movies[movie]['release_date'])
+                                            .year
+                                            .toString()),
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              ),
                             ),
                             Column(
                               children: [
@@ -69,10 +97,11 @@ class _BlankScreenState extends State<BlankScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) =>
-                                            StarRatingModal(filmData: movie),
+                                        builder: (context) => StarRatingModal(
+                                            filmData: movies[movie]),
                                       ),
                                     );
+                                    fetchData;
                                   },
                                   icon: const Icon(Icons.stars),
                                   color: Colors.green,
@@ -83,7 +112,7 @@ class _BlankScreenState extends State<BlankScreen> {
                               children: [
                                 IconButton(
                                   onPressed: () {
-                                    feedback.bookmark(movie);
+                                    feedback.bookmark(movie, movies[movie]);
                                   },
                                   icon: Icon(Icons.bookmark_add_outlined),
                                 )
@@ -93,7 +122,7 @@ class _BlankScreenState extends State<BlankScreen> {
                               children: [
                                 IconButton(
                                   onPressed: () {
-                                    feedback.ignoreFilm(movie);
+                                    feedback.ignoreFilm(movie, movies[movie]);
                                   },
                                   icon: const Icon(Icons.close),
                                   color: Colors.red,

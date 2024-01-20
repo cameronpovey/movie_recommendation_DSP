@@ -22,7 +22,7 @@ class _StarRatingModalState extends State<StarRatingModal> {
     debugPrint(widget.filmData.toString());
     super.initState();
     film = widget.filmData;
-    filmName = widget.filmData['Name'];
+    filmName = widget.filmData['film_data']['title'];
   }
 
   @override
