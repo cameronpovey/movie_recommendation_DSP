@@ -98,10 +98,12 @@ class _BlankScreenState extends State<BlankScreen> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => StarRatingModal(
+                                            filmID: movie,
                                             filmData: movies[movie]),
                                       ),
                                     );
                                     fetchData;
+                                    //REMOVE MOVIE
                                   },
                                   icon: const Icon(Icons.stars),
                                   color: Colors.green,
@@ -113,6 +115,7 @@ class _BlankScreenState extends State<BlankScreen> {
                                 IconButton(
                                   onPressed: () {
                                     feedback.bookmark(movie, movies[movie]);
+                                    //REMOVE MOVIE
                                   },
                                   icon: Icon(Icons.bookmark_add_outlined),
                                 )
@@ -123,6 +126,7 @@ class _BlankScreenState extends State<BlankScreen> {
                                 IconButton(
                                   onPressed: () {
                                     feedback.ignoreFilm(movie, movies[movie]);
+                                    //REMOVE MOVIE
                                   },
                                   icon: const Icon(Icons.close),
                                   color: Colors.red,

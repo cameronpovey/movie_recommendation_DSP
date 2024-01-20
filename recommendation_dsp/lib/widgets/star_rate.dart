@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:recommendation_dsp/Functions/amendRec.dart';
 
 class StarRatingModal extends StatefulWidget {
+  final String filmID;
   final Map<dynamic, dynamic> filmData;
 
   StarRatingModal({
+    required this.filmID,
     required this.filmData,
   });
 
@@ -80,7 +83,10 @@ class _StarRatingModalState extends State<StarRatingModal> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                editRec().rateFilm(widget.filmID, widget.filmData, rating);
+                Navigator.of(context).pop();
+              },
               child: const Text("Submit Ratings →"),
             ),
           ),

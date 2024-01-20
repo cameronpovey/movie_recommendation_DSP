@@ -7,22 +7,30 @@ import 'package:firebase_core/firebase_core.dart';
 import 'Screens/welcome.dart';
 import 'Screens/home.dart';
 
-Future<bool> checkNew() async {
+Future<String> checkNew() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? storedValue = prefs.getString('your_key');
+  String? storedValue = prefs.getString('userID');
 
   if (storedValue == null) {
-    return true;
+    return 'nulluser';
   } else {
-    return false;
+    return storedValue;
   }
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  late bool isNew;
 
-  bool isNew = await checkNew();
+  String userID = await checkNew();
+  if (userID == 'nulluser') {
+    isNew = true;
+  } else {
+    isNew = false;
+  }
+
+  //FOR TESTING
   isNew = false;
 
   runApp(MyApp(isNew: isNew));
