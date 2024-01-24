@@ -14,14 +14,21 @@ def startRec(request):
     request_args = request.args
 
     if request_args and 'id' in request_args:
+        used = []
         ratings = getRatings(request_args['id'])
+
+        for id in ratings:
+            used.append(id)
+
         genres = getGen(ratings)
-        reccs = findGen(genres)
+        reccs = findGen(genres, used)
         return reccs
     else:
         return 'ERROR'
 
-def findGen(genres):
+def findGen(genres, used):
+    print(genres)
+    print("------------------------")
     count = 0
     filmData = {}
     if not firebase_admin._apps:
@@ -30,12 +37,27 @@ def findGen(genres):
 
     ref = db.reference(f'/')
     data = ref.get()
+
     for filmid in data.keys():
-        if count == 5:
+        if count == 10:
             break
+        if filmid in used:
+            continue
         if data[filmid]['genres'][0] in genres:
             filmData[filmid] = data[filmid]
             count = count +1
+
+    if filmData == {}:
+        print("top 10")
+        count = 0
+        for filmid in data.keys():
+            if count == 10:
+                break
+            if filmid in used:
+                continue
+            filmData[filmid] = data[filmid]
+            count = count +1
+
     return filmData
 
 def getGen(ratings):
@@ -43,13 +65,16 @@ def getGen(ratings):
     
     for movie in ratings:
         filmRating = ratings[movie]['rating']
+        filmGenre = ratings[movie]['film_data']['genres'][0]
         if filmRating == 'ignore':
+            if filmGenre in genres:
+                genres.remove(filmGenre)
             continue
         elif filmRating == 'bookmark':
-            genres.append(ratings[movie]['film_data']['genres'][0])
+            genres.append(filmGenre)
             continue
         elif int(filmRating) >= 7:
-            genres.append(ratings[movie]['film_data']['genres'][0])
+            genres.append(filmGenre)
             
     return genres
 

@@ -4,10 +4,12 @@ import 'package:recommendation_dsp/Functions/amendRec.dart';
 class StarRatingModal extends StatefulWidget {
   final String filmID;
   final Map<dynamic, dynamic> filmData;
+  final String userId;
 
   StarRatingModal({
     required this.filmID,
     required this.filmData,
+    required this.userId,
   });
 
   @override
@@ -19,11 +21,15 @@ class _StarRatingModalState extends State<StarRatingModal> {
   late Map<dynamic, dynamic> film;
   late String filmName;
   String liveRate = "Rate";
+  late String userId;
 
   @override
   void initState() {
     debugPrint(widget.filmData.toString());
     super.initState();
+    setState(() {
+      userId = widget.userId;
+    });
     film = widget.filmData;
     filmName = widget.filmData['title'];
   }
@@ -84,7 +90,8 @@ class _StarRatingModalState extends State<StarRatingModal> {
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
               onPressed: () {
-                editRec().rateFilm(widget.filmID, widget.filmData, rating);
+                editRec()
+                    .rateFilm(widget.filmID, widget.filmData, rating, userId);
                 Navigator.of(context).pop();
               },
               child: const Text("Submit Ratings →"),

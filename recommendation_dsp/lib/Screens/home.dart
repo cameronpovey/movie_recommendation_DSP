@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:recommendation_dsp/Functions/amendRec.dart';
 import 'package:recommendation_dsp/Functions/getRec.dart';
+import 'package:recommendation_dsp/Screens/profile.dart';
 import 'package:recommendation_dsp/Screens/ratings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,6 +9,12 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/star_rate.dart';
 
 class BlankScreen extends StatefulWidget {
+  final String userId;
+
+  BlankScreen({
+    required this.userId,
+  });
+
   @override
   _BlankScreenState createState() => _BlankScreenState();
 }
@@ -16,18 +23,24 @@ class _BlankScreenState extends State<BlankScreen> {
   GetData connect = GetData();
   editRec feedback = editRec();
   Map<dynamic, dynamic> movies = {};
+  late String userId;
 
   @override
   void initState() {
     super.initState();
+    setState(() {
+      userId = widget.userId;
+    });
+
     fetchData();
   }
 
   fetchData() async {
-    var response = await connect.getRecs();
+    var response = await connect.getRecs(userId);
     setState(() {
       movies = response;
     });
+    debugPrint(movies.toString());
   }
 
   @override
@@ -37,16 +50,33 @@ class _BlankScreenState extends State<BlankScreen> {
         centerTitle: true,
         title: const Text("Movie Recommendations"),
         leading: IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ShowRatings(),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ShowRatings(
+                  userId: userId,
                 ),
-              );
-              fetchData();
-            },
-            icon: Icon(Icons.star_border)),
+              ),
+            );
+            fetchData();
+          },
+          icon: Icon(Icons.star_border),
+        ),
+        actions: [
+          IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Profile(
+                      userId: userId,
+                    ),
+                  ),
+                );
+              },
+              icon: Icon(Icons.person))
+        ],
       ),
       body: ListView(
         children: [
@@ -98,8 +128,10 @@ class _BlankScreenState extends State<BlankScreen> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => StarRatingModal(
-                                            filmID: movie,
-                                            filmData: movies[movie]),
+                                          filmID: movie,
+                                          filmData: movies[movie],
+                                          userId: userId,
+                                        ),
                                       ),
                                     );
                                     fetchData;
@@ -114,7 +146,8 @@ class _BlankScreenState extends State<BlankScreen> {
                               children: [
                                 IconButton(
                                   onPressed: () {
-                                    feedback.bookmark(movie, movies[movie]);
+                                    feedback.bookmark(
+                                        movie, movies[movie], userId);
                                     //REMOVE MOVIE
                                   },
                                   icon: Icon(Icons.bookmark_add_outlined),
@@ -125,7 +158,8 @@ class _BlankScreenState extends State<BlankScreen> {
                               children: [
                                 IconButton(
                                   onPressed: () {
-                                    feedback.ignoreFilm(movie, movies[movie]);
+                                    feedback.ignoreFilm(
+                                        movie, movies[movie], userId);
                                     //REMOVE MOVIE
                                   },
                                   icon: const Icon(Icons.close),

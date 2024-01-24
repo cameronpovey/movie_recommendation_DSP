@@ -4,11 +4,11 @@ import 'dart:convert';
 
 //db2view
 class GetData {
-  bool fakeData = true;
-  bool local = true;
-  bool useTestUser = true;
+  bool fakeData = false;
+  bool local = false;
+  bool useTestUser = false;
 
-  Future<Map<dynamic, dynamic>> getRecs() async {
+  Future<Map<dynamic, dynamic>> getRecs(userId) async {
     if (fakeData) {
       return GetfakeData();
     }
@@ -19,16 +19,22 @@ class GetData {
     late http.Response response;
 
     if (local == true) {
-      response = await http
-          .get(Uri.parse('http://192.168.1.120:8080/?id=${testUser}'));
-    } else {
-      response = await http.get(Uri.parse(
-          'https://europe-west2-cohesive-memory-342803.cloudfunctions.net/function-1/?id=${testUser}'));
       if (useTestUser == true) {
+        response =
+            await http.get(Uri.parse('http://192.168.1.120:8080/?id=User111'));
       } else {
-        //WHEN PASSING ACTUAL USER
         response = await http
             .get(Uri.parse('http://192.168.1.120:8080/?id=${testUser}'));
+      }
+      //local fake user
+    } else {
+      if (useTestUser == true) {
+        response = await http.get(Uri.parse(
+            'https://europe-west2-cohesive-memory-342803.cloudfunctions.net/function-1/?id=User111'));
+      } else {
+        //WHEN PASSING ACTUAL USER to FUNCTION
+        response = await http.get(Uri.parse(
+            'https://europe-west2-cohesive-memory-342803.cloudfunctions.net/function-1/?id=${userId}'));
       }
     }
 
@@ -39,7 +45,7 @@ class GetData {
     return jsonData;
   }
 
-  getRatings() async {
+  getRatings(userId) async {
     if (fakeData) {
       return GetfakeRateData();
     }
@@ -50,16 +56,21 @@ class GetData {
     late http.Response response;
 
     if (local == true) {
-      response = await http
-          .get(Uri.parse('http://192.168.1.120:8080/ratings/?id=${testUser}'));
-    } else {
-      response = await http.get(Uri.parse(
-          'https://europe-west2-cohesive-memory-342803.cloudfunctions.net/function-1/?id=${testUser}'));
       if (useTestUser == true) {
+        response = await http
+            .get(Uri.parse('http://192.168.1.120:8080/ratings/?id=User111'));
       } else {
-        //WHEN PASSING ACTUAL USER
         response = await http.get(
             Uri.parse('http://192.168.1.120:8080/ratings/?id=${testUser}'));
+      }
+    } else {
+      if (useTestUser == true) {
+        response = await http.get(Uri.parse(
+            'https://europe-west2-cohesive-memory-342803.cloudfunctions.net/ratings/?id=User111'));
+      } else {
+        //WHEN PASSING ACTUAL USER to FUNCTION
+        response = await http.get(Uri.parse(
+            'https://europe-west2-cohesive-memory-342803.cloudfunctions.net/ratings/?id=${userId}'));
       }
     }
 

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:recommendation_dsp/firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'firebase_options.dart';
 
 import 'Screens/welcome.dart';
 import 'Screens/home.dart';
@@ -20,7 +23,10 @@ Future<String> checkNew() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseAuth _auth = FirebaseAuth.instance;
+
   late bool isNew;
 
   String userID = await checkNew();
@@ -31,18 +37,24 @@ void main() async {
   }
 
   //FOR TESTING
-  isNew = false;
+  //isNew = false;
 
-  runApp(MyApp(isNew: isNew));
+  runApp(MyApp(isNew: isNew, userID: userID));
 }
 
 class MyApp extends StatelessWidget {
   final bool isNew;
-  MyApp({required this.isNew});
+  final String userID;
+  MyApp({
+    required this.isNew,
+    required this.userID,
+  });
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'DSP RECOMMENDATIONS',
@@ -87,7 +99,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: isNew == true ? BlankScreenWelcome() : BlankScreen(),
+      home: isNew == true ? BlankScreenWelcome() : BlankScreen(userId: userID),
     );
   }
 }

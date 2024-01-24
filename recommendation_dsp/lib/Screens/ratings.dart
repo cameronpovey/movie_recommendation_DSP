@@ -3,6 +3,11 @@ import 'package:recommendation_dsp/Functions/getRec.dart';
 
 class ShowRatings extends StatefulWidget {
   //copy when passing
+  final String userId;
+
+  ShowRatings({
+    required this.userId,
+  });
 
   @override
   _ShowRatingsState createState() => _ShowRatingsState();
@@ -11,15 +16,19 @@ class ShowRatings extends StatefulWidget {
 class _ShowRatingsState extends State<ShowRatings> {
   GetData connect = GetData();
   Map<dynamic, dynamic> movies = {};
+  late String userId;
 
   @override
   void initState() {
     super.initState;
+    setState(() {
+      userId = widget.userId;
+    });
     getRatings();
   }
 
   getRatings() async {
-    var response = await connect.getRatings();
+    var response = await connect.getRatings(userId);
     setState(() {
       movies = response;
     });
