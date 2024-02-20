@@ -34,7 +34,7 @@ print("------------------------------")
 print(f'No Unique Films: {len(films)}')
 
 
-cred = credentials.Certificate('cohesive-memory-342803-firebase-adminsdk-k1zdq-3af156581b.json')
+cred = credentials.Certificate('serviceKey.json')
 firebase_admin.initialize_app(cred, {'databaseURL': 'https://cohesive-memory-342803-default-rtdb.europe-west1.firebasedatabase.app/'})
 
 ref = db.reference('/')
