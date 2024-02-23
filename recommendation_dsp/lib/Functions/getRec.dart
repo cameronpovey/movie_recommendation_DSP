@@ -1,6 +1,8 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 //db2view
 class GetData {
@@ -50,38 +52,46 @@ class GetData {
       return GetfakeRateData();
     }
 
-    Map<String, dynamic> jsonData = {};
-
     String testUser = 'User111';
-    late http.Response response;
 
-    if (local == true) {
-      if (useTestUser == true) {
-        response = await http
-            .get(Uri.parse('http://192.168.1.120:8080/ratings/?id=User111'));
-      } else {
-        response = await http.get(
-            Uri.parse('http://192.168.1.120:8080/ratings/?id=${testUser}'));
-      }
+    Map<String, dynamic> ratings = {};
+    FirebaseFirestore db = FirebaseFirestore.instance;
+
+    late CollectionReference ratingsRef;
+
+    if (useTestUser == true) {
+      ratingsRef = db.collection('Users').doc(testUser).collection('Ratings');
     } else {
-      if (useTestUser == true) {
-        response = await http.get(Uri.parse(
-            'https://europe-west2-cohesive-memory-342803.cloudfunctions.net/ratings/?id=User111'));
-      } else {
-        //WHEN PASSING ACTUAL USER to FUNCTION
-        response = await http.get(Uri.parse(
-            'https://europe-west2-cohesive-memory-342803.cloudfunctions.net/ratings/?id=${userId}'));
-      }
+      ratingsRef = db.collection('Users').doc(userId).collection('Ratings');
     }
 
-    if (response.statusCode == 200) {
-      jsonData = json.decode(response.body);
-    }
+    await ratingsRef.get().then(
+      (querySnapshot) async {
+        print("Successfully completed");
+        for (var docSnapshot in querySnapshot.docs) {
+          Map<String, dynamic> data =
+              docSnapshot.data() as Map<String, dynamic>;
+          data['film_data'] = await getFilms(docSnapshot.id);
+          ratings[docSnapshot.id] = data;
+        }
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
 
-    debugPrint(jsonData.toString());
+    debugPrint(
+        "\/\//\//\\\/\\/\/\\/\/\/\\/\/\/\/\/\/\/\/\\/\/\/\/\/\/\\/\/\/\/\/");
+    debugPrint(ratings.toString());
 
-    return jsonData;
+    return ratings;
   }
+}
+
+Future<Map<dynamic, dynamic>> getFilms(String id) async {
+  // Initialize Realtime Database
+  final ref = FirebaseDatabase.instance.ref();
+  final snapshot = await ref.child('$id/').get();
+  final data = snapshot.value;
+  return data as Map<dynamic, dynamic>;
 }
 
 Map<String, dynamic> GetfakeData() {

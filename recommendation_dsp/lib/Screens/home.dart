@@ -23,6 +23,7 @@ class _BlankScreenState extends State<BlankScreen> {
   GetData connect = GetData();
   editRec feedback = editRec();
   Map<dynamic, dynamic> movies = {};
+  Map<dynamic, dynamic> ratings = {};
   late String userId;
 
   @override
@@ -33,6 +34,7 @@ class _BlankScreenState extends State<BlankScreen> {
     });
 
     fetchData();
+    getRatings();
   }
 
   fetchData() async {
@@ -40,7 +42,13 @@ class _BlankScreenState extends State<BlankScreen> {
     setState(() {
       movies = response;
     });
-    debugPrint(movies.toString());
+  }
+
+  getRatings() async {
+    var response = await connect.getRatings(userId);
+    setState(() {
+      ratings = response;
+    });
   }
 
   @override
@@ -56,6 +64,7 @@ class _BlankScreenState extends State<BlankScreen> {
               MaterialPageRoute(
                 builder: (context) => ShowRatings(
                   userId: userId,
+                  ratings: ratings,
                 ),
               ),
             );
@@ -135,6 +144,13 @@ class _BlankScreenState extends State<BlankScreen> {
                                       ),
                                     );
                                     fetchData;
+
+                                    //CHECK FOR RATING AFTER STARRATINGMODAL
+                                    //UPDATE WITH RATING
+                                    ratings[movie] = {};
+                                    ratings[movie]['film_data'] = movies[movie];
+                                    ratings[movie]['rating'] = 'RATING';
+
                                     //REMOVE MOVIE
                                   },
                                   icon: const Icon(Icons.stars),
@@ -148,6 +164,9 @@ class _BlankScreenState extends State<BlankScreen> {
                                   onPressed: () {
                                     feedback.bookmark(
                                         movie, movies[movie], userId);
+                                    ratings[movie] = {};
+                                    ratings[movie]['film_data'] = movies[movie];
+                                    ratings[movie]['rating'] = 'bookmark';
                                     //REMOVE MOVIE
                                   },
                                   icon: Icon(Icons.bookmark_add_outlined),
@@ -160,6 +179,9 @@ class _BlankScreenState extends State<BlankScreen> {
                                   onPressed: () {
                                     feedback.ignoreFilm(
                                         movie, movies[movie], userId);
+                                    ratings[movie] = {};
+                                    ratings[movie]['film_data'] = movies[movie];
+                                    ratings[movie]['rating'] = 'ignore';
                                     //REMOVE MOVIE
                                   },
                                   icon: const Icon(Icons.close),

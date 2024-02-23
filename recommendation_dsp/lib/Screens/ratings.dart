@@ -4,9 +4,11 @@ import 'package:recommendation_dsp/Functions/getRec.dart';
 class ShowRatings extends StatefulWidget {
   //copy when passing
   final String userId;
+  final Map<dynamic, dynamic> ratings;
 
   ShowRatings({
     required this.userId,
+    required this.ratings,
   });
 
   @override
@@ -23,14 +25,7 @@ class _ShowRatingsState extends State<ShowRatings> {
     super.initState;
     setState(() {
       userId = widget.userId;
-    });
-    getRatings();
-  }
-
-  getRatings() async {
-    var response = await connect.getRatings(userId);
-    setState(() {
-      movies = response;
+      movies = widget.ratings;
     });
   }
 
@@ -41,16 +36,18 @@ class _ShowRatingsState extends State<ShowRatings> {
         centerTitle: true,
         title: const Text("Past Ratings"),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          for (var movie in movies.keys) ...{
-            Text("---------------------"),
-            Text(movies[movie]['film_data']['title']),
-            Text(movies[movie]['rating'].toString()),
-            Text("---------------------"),
-          }
-        ],
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView(
+          children: [
+            for (var movie in movies.keys) ...{
+              Text("---------------------"),
+              Text(movies[movie]['film_data']['title']),
+              Text(movies[movie]['rating'].toString()),
+              Text("---------------------"),
+            }
+          ],
+        ),
       ),
     );
   }
