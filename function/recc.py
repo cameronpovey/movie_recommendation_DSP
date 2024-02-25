@@ -14,21 +14,40 @@ def startRec(request):
     request_args = request.args
 
     if request_args and 'id' in request_args:
-        used = []
         ratings = getRatings(request_args['id'])
 
+        used = []
         for id in ratings:
+            for thing in ratings[id]['film_data']:
+                print(thing)
+            return {}
             used.append(id)
 
         genres = getGen(ratings)
         reccs = findGen(genres, used)
+
+        out = {}
+        out['reccs'] = {}
+        out['rated'] = {}
+        for film in reccs:
+            out['reccs'][film] = {}
+            out['reccs'][film]['title'] = reccs[film]['title']
+            out['reccs'][film]['genreScore'] = reccs[film]['genreScore']
+            
+        for movie in ratings:
+            out['rated'][movie] = {}
+            out['rated'][movie]['title'] = ratings[movie]['film_data']['title']
+            out['rated'][movie]['rating'] = ratings[movie]['rating']
+
         return reccs
     else:
         return 'ERROR'
 
 def findGen(genres, used):
-    print(genres)
-    print("------------------------")
+    weight = 0
+    # 0 for standard weights
+    # increase for dramatic weights
+
     count = 0
     filmData = {}
     if not firebase_admin._apps:
@@ -38,44 +57,71 @@ def findGen(genres, used):
     ref = db.reference(f'/')
     data = ref.get()
 
-    for filmid in data.keys():
-        if count == 10:
-            break
+    for filmid in list(data.keys()):
         if filmid in used:
+            del data[filmid]
             continue
-        if data[filmid]['genres'][0] in genres:
-            filmData[filmid] = data[filmid]
-            count = count +1
+        
+        diversity = 0
+        genreScore = 0
 
-    if filmData == {}:
-        print("top 10")
-        count = 0
-        for filmid in data.keys():
-            if count == 10:
-                break
-            if filmid in used:
-                continue
-            filmData[filmid] = data[filmid]
-            count = count +1
+        filmGen = data[filmid]['genres']
+        
+        for i, genre in enumerate(filmGen):
+            if genre in genres:
+                factor = ((len(filmGen) - i - 1)*weight *0.1) + 1
+                weightRate = genres[genre]['avg']*factor
+                genreScore = genreScore + weightRate
+            else:
+                diversity = diversity + 1
 
-    return filmData
+        data[filmid]['genreScore'] = genreScore/len(genres)
+        data[filmid]['diversityScore'] = diversity
+
+    sorted_data = sorted(data.items(), key=lambda item: item[1]['genreScore'], reverse=True)
+
+    output = dict(sorted_data[:20])
+
+    for genre in genres:
+        print(genre, ' - ', genres[genre])
+        
+    print("---------------------")
+
+    for recc in output:
+        print(output[recc]['title'], ' - ', output[recc]['genreScore'])
+
+    return output
 
 def getGen(ratings):
-    genres = []
+    weight = 0
+    # 0 for standard weights
+    # increase for dramatic weights
+    genres = {}
     
     for movie in ratings:
-        filmRating = ratings[movie]['rating']
-        filmGenre = ratings[movie]['film_data']['genres'][0]
-        if filmRating == 'ignore':
-            if filmGenre in genres:
-                genres.remove(filmGenre)
-            continue
-        elif filmRating == 'bookmark':
-            genres.append(filmGenre)
-            continue
-        elif int(filmRating) >= 7:
-            genres.append(filmGenre)
+        print(ratings[movie]['film_data']['title'], ' - ', ratings[movie]['rating'])
+        filmRate = ratings[movie]['rating']
+        filmGen = ratings[movie]['film_data']['genres']
+        
+        if filmRate == 'bookmark':
+            filmRate = 7
+
+        elif filmRate == 'ignore':
+            filmRate = 0
+
+        for i, genre in enumerate(filmGen):
+            factor = ((len(filmGen) - i - 1)*weight *0.1) + 1
+
+            weightRate = filmRate*factor
             
+            if genre in genres:
+                genres[genre]['size'] = genres[genre]['size'] + 1
+                genres[genre]['total'] = genres[genre]['total'] + (weightRate)
+                genres[genre]['avg'] = genres[genre]['total'] / genres[genre]['size']
+            else:
+                genres[genre] = {'size': 1, 'total': weightRate, 'avg': weightRate/1}
+
+    print("---------------------")
     return genres
 
 def getRatings(uid):
@@ -91,11 +137,11 @@ def getRatings(uid):
         data = doc.to_dict()
         data['film_data'] = getFilms(doc.id)
         ratings[doc.id] = data
-        print(f'Document ID: {doc.id}, Data: {data}')
+        print(doc.id)
+        #print(f'Document ID: {doc.id}, Data: {data}')
 
     return ratings
     
-#USED TO GET THE FILM FROM ID
 def getFilms(id):
     if not firebase_admin._apps:
         cred = credentials.Certificate('serviceKey.json')

@@ -36,7 +36,7 @@ def getRatings(uid):
         ratings[doc.id] = data
         print(f'Document ID: {doc.id}, Data: {data}')
 
-    return ratings
+    return 
     
 
 
