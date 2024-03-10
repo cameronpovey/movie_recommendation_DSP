@@ -7,8 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 //db2view
 class GetData {
   bool fakeData = false;
-  bool local = false;
-  bool useTestUser = false;
+  bool local = true;
 
   Future<Map<dynamic, dynamic>> getRecs(userId) async {
     if (fakeData) {
@@ -16,8 +15,6 @@ class GetData {
     }
 
     Map<String, dynamic> jsonData = {};
-
-    String testUser = 'User111';
     late http.Response response;
 
     if (local == true) {
@@ -52,18 +49,12 @@ class GetData {
       return GetfakeRateData();
     }
 
-    String testUser = 'User111';
-
     Map<String, dynamic> ratings = {};
     FirebaseFirestore db = FirebaseFirestore.instance;
 
     late CollectionReference ratingsRef;
 
-    if (useTestUser == true) {
-      ratingsRef = db.collection('Users').doc(testUser).collection('Ratings');
-    } else {
-      ratingsRef = db.collection('Users').doc(userId).collection('Ratings');
-    }
+    ratingsRef = db.collection('Users').doc(userId).collection('Ratings');
 
     await ratingsRef.get().then(
       (querySnapshot) async {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:recommendation_dsp/Functions/amendRec.dart';
 import 'package:recommendation_dsp/Functions/getRec.dart';
+import 'package:recommendation_dsp/Screens/movie.dart';
 import 'package:recommendation_dsp/Screens/profile.dart';
 import 'package:recommendation_dsp/Screens/ratings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,6 +26,7 @@ class _BlankScreenState extends State<BlankScreen> {
   Map<dynamic, dynamic> movies = {};
   Map<dynamic, dynamic> ratings = {};
   late String userId;
+  List<Map<dynamic, dynamic>> changes = [];
 
   @override
   void initState() {
@@ -41,6 +43,10 @@ class _BlankScreenState extends State<BlankScreen> {
     var response = await connect.getRecs(userId);
     setState(() {
       movies = response;
+
+      for (var movie in movies.keys) {
+        movies[movie]['changes'] = false;
+      }
     });
   }
 
@@ -51,6 +57,21 @@ class _BlankScreenState extends State<BlankScreen> {
     });
   }
 
+  pushNupdate() async {
+    for (var changed in changes) {
+      if (changed['rating'] == 'bookmark') {
+        feedback.bookmark(changed['movie'], changed['data'], userId);
+      } else if (changed['rating'] == 'ignore') {
+        feedback.ignoreFilm(changed['movie'], changed['data'], userId);
+      } else {
+        feedback.rateFilm(
+            changed['movie'], changed['data'], changed['rating'], userId);
+      }
+    }
+    fetchData();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,8 +79,8 @@ class _BlankScreenState extends State<BlankScreen> {
         centerTitle: true,
         title: const Text("Movie Recommendations"),
         leading: IconButton(
-          onPressed: () {
-            Navigator.push(
+          onPressed: () async {
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ShowRatings(
@@ -68,14 +89,15 @@ class _BlankScreenState extends State<BlankScreen> {
                 ),
               ),
             );
-            fetchData();
+            pushNupdate();
+            // fetchData();
           },
           icon: Icon(Icons.star_border),
         ),
         actions: [
           IconButton(
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => Profile(
@@ -89,114 +111,224 @@ class _BlankScreenState extends State<BlankScreen> {
       ),
       body: ListView(
         children: [
+          if (changes.length > 0) ...{
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ElevatedButton(
+                onPressed: () async {
+                  await pushNupdate();
+                },
+                child: Text('Update Recommendations'),
+              ),
+            ),
+          },
           for (var movie in movies.keys) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          movies[movie]['title'],
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+            if (movies[movie]['changed'] == true) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(
+                        onPressed: () {},
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                            child: Text(movies[movie]['title']))
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            "Rated " +
+                                                ratings[movie]['rating']
+                                                    .toString(),
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(DateTime.parse(
-                                                movies[movie]['release_date'])
-                                            .year
-                                            .toString()),
-                                      ),
-                                    ],
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                children: [
+                                  IconButton(
+                                    onPressed: () async {
+                                      changes.remove(movie);
+
+                                      ratings.remove(movie);
+
+                                      movies[movie]['changed'] = false;
+
+                                      setState(() {});
+                                    },
+                                    icon: const Icon(Icons.undo),
+                                    color: Colors.green,
                                   )
                                 ],
                               ),
-                            ),
-                            Column(
-                              children: [
-                                IconButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => StarRatingModal(
-                                          filmID: movie,
-                                          filmData: movies[movie],
-                                          userId: userId,
-                                        ),
-                                      ),
-                                    );
-                                    fetchData;
-
-                                    //CHECK FOR RATING AFTER STARRATINGMODAL
-                                    //UPDATE WITH RATING
-                                    ratings[movie] = {};
-                                    ratings[movie]['film_data'] = movies[movie];
-                                    ratings[movie]['rating'] = 'RATING';
-
-                                    //REMOVE MOVIE
-                                  },
-                                  icon: const Icon(Icons.stars),
-                                  color: Colors.green,
-                                )
-                              ],
-                            ),
-                            Column(
-                              children: [
-                                IconButton(
-                                  onPressed: () {
-                                    feedback.bookmark(
-                                        movie, movies[movie], userId);
-                                    ratings[movie] = {};
-                                    ratings[movie]['film_data'] = movies[movie];
-                                    ratings[movie]['rating'] = 'bookmark';
-                                    //REMOVE MOVIE
-                                  },
-                                  icon: Icon(Icons.bookmark_add_outlined),
-                                )
-                              ],
-                            ),
-                            Column(
-                              children: [
-                                IconButton(
-                                  onPressed: () {
-                                    feedback.ignoreFilm(
-                                        movie, movies[movie], userId);
-                                    ratings[movie] = {};
-                                    ratings[movie]['film_data'] = movies[movie];
-                                    ratings[movie]['rating'] = 'ignore';
-                                    //REMOVE MOVIE
-                                  },
-                                  icon: const Icon(Icons.close),
-                                  color: Colors.red,
-                                )
-                              ],
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                )
-              ],
-            )
+                ],
+              )
+            ] else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          var result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => movieDet(
+                                userId: userId,
+                                filmID: movie,
+                                filmData: movies[movie],
+                              ),
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            movies[movie]['title'],
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(DateTime.parse(
+                                                  movies[movie]['release_date'])
+                                              .year
+                                              .toString()),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                children: [
+                                  IconButton(
+                                    onPressed: () async {
+                                      var result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => StarRatingModal(
+                                            filmID: movie,
+                                            filmData: movies[movie],
+                                            userId: userId,
+                                          ),
+                                        ),
+                                      );
+
+                                      if (result != null) {
+                                        changes.add(result);
+
+                                        ratings[movie] = {};
+                                        ratings[movie]['film_data'] =
+                                            movies[movie];
+                                        ratings[movie]['rating'] =
+                                            result['rating'];
+
+                                        movies[movie]['changed'] = true;
+
+                                        setState(() {});
+                                        //movies.remove(movie);
+                                        //editRec().rateFilm(movie, movies[movie], result['rating'], userId);
+                                      }
+
+                                      setState(() {});
+                                    },
+                                    icon: const Icon(Icons.stars),
+                                    color: Colors.green,
+                                  )
+                                ],
+                              ),
+                              Column(
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      changes.add(
+                                        {
+                                          'movie': movie,
+                                          'rating': 'bookmark',
+                                          'data': movies[movie]
+                                        },
+                                      );
+                                      ratings[movie] = {};
+                                      ratings[movie]['film_data'] =
+                                          movies[movie];
+                                      ratings[movie]['rating'] = 'bookmark';
+
+                                      movies[movie]['changed'] = true;
+                                      setState(() {});
+                                    },
+                                    icon: Icon(Icons.bookmark_add_outlined),
+                                  )
+                                ],
+                              ),
+                              Column(
+                                children: [
+                                  IconButton(
+                                    onPressed: () {
+                                      changes.add(
+                                        {
+                                          'movie': movie,
+                                          'rating': 'ignore',
+                                          'data': movies[movie]
+                                        },
+                                      );
+                                      ratings[movie] = {};
+                                      ratings[movie]['film_data'] =
+                                          movies[movie];
+                                      ratings[movie]['rating'] = 'ignore';
+
+                                      movies[movie]['changed'] = true;
+                                      setState(() {});
+                                    },
+                                    icon: const Icon(Icons.close),
+                                    color: Colors.red,
+                                  )
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              )
+            ],
           ]
         ],
       ),

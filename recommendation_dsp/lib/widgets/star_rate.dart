@@ -29,9 +29,9 @@ class _StarRatingModalState extends State<StarRatingModal> {
     super.initState();
     setState(() {
       userId = widget.userId;
+      film = widget.filmData;
+      filmName = widget.filmData['title'];
     });
-    film = widget.filmData;
-    filmName = widget.filmData['title'];
   }
 
   @override
@@ -92,7 +92,13 @@ class _StarRatingModalState extends State<StarRatingModal> {
               onPressed: () {
                 editRec()
                     .rateFilm(widget.filmID, widget.filmData, rating, userId);
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(
+                  {
+                    "movie": widget.filmID,
+                    "rating": rating,
+                    'data': widget.filmData
+                  },
+                );
               },
               child: const Text("Submit Ratings →"),
             ),
