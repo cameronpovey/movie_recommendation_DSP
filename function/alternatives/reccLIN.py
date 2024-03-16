@@ -5,7 +5,7 @@ from firebase_admin import credentials, db
 from google.cloud import firestore
 
 #linear
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 import pandas as pd
 
@@ -108,7 +108,7 @@ def startRec(request):
         print(rates)
 
         #Train Model
-        model = RandomForestRegressor(n_estimators=10000, random_state=0, max_depth=None)  # Initialize Random Forest
+        model = LinearRegression()
 
         #New Data
         new_ratings = newFilms(used)

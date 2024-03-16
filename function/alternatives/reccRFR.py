@@ -108,7 +108,7 @@ def startRec(request):
         print(rates)
 
         #Train Model
-        model = RandomForestRegressor(n_estimators=10000, random_state=0, max_depth=None)  # Initialize Random Forest
+        model = RandomForestRegressor(n_estimators=1000, random_state=42)  # Initialize Random Forest
 
         #New Data
         new_ratings = newFilms(used)
