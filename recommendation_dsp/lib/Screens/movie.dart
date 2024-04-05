@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:recommendation_dsp/Screens/home.dart';
-import 'package:recommendation_dsp/Screens/welcome.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import './home.dart';
 
 class movieDet extends StatefulWidget {
   final String userId;

@@ -35,7 +35,6 @@ def startRec(request):
             out['rated'][movie] = {}
             out['rated'][movie]['title'] = ratings[movie]['film_data']['title']
             out['rated'][movie]['rating'] = ratings[movie]['rating']
-
         return reccs
     else:
         return 'ERROR'
@@ -77,7 +76,7 @@ def findGen(genres, used):
 
     sorted_data = sorted(data.items(), key=lambda item: item[1]['genreScore'], reverse=True)
 
-    output = dict(sorted_data[:20])
+    output = dict(sorted_data[:10])
 
     for genre in genres:
         print(genre, ' - ', genres[genre])

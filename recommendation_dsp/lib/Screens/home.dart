@@ -5,7 +5,7 @@ import 'package:recommendation_dsp/Screens/movie.dart';
 import 'package:recommendation_dsp/Screens/profile.dart';
 import 'package:recommendation_dsp/Screens/ratings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
 
 import '../widgets/star_rate.dart';
 
@@ -26,17 +26,45 @@ class _BlankScreenState extends State<BlankScreen> {
   Map<dynamic, dynamic> movies = {};
   Map<dynamic, dynamic> ratings = {};
   late String userId;
-  List<Map<dynamic, dynamic>> changes = [];
+  late List<Map<dynamic, dynamic>> changes = [];
 
   @override
   void initState() {
     super.initState();
-    setState(() {
-      userId = widget.userId;
-    });
+    userId = widget.userId;
 
-    fetchData();
-    getRatings();
+    initAsync();
+  }
+
+  void initAsync() async {
+    await getChanges();
+
+    await fetchData();
+    await getRatings();
+    putChanges();
+    setState(() {});
+  }
+
+  putChanges() {
+    debugPrint("-----------------");
+    for (var change in changes) {
+      debugPrint(change['data']['title']);
+      var movie = change['movie'];
+
+      if (movies.keys.contains(change['movie'])) {
+        movies[movie]['changed'] = true;
+      }
+
+      if (change['rating'] == 'remove') {
+        ratings.remove(movie);
+      } else {
+        ratings[movie] = {};
+        ratings[movie]['film_data'] = change['data'];
+        ratings[movie]['rating'] = change['rating'];
+      }
+    }
+
+    setState(() {});
   }
 
   fetchData() async {
@@ -58,8 +86,11 @@ class _BlankScreenState extends State<BlankScreen> {
   }
 
   pushNupdate() async {
+    debugPrint(changes.toString());
     for (var changed in changes) {
-      if (changed['rating'] == 'bookmark') {
+      if (changed['rating'] == 'remove') {
+        feedback.removeRating(changed['movie'], userId);
+      } else if (changed['rating'] == 'bookmark') {
         feedback.bookmark(changed['movie'], changed['data'], userId);
       } else if (changed['rating'] == 'ignore') {
         feedback.ignoreFilm(changed['movie'], changed['data'], userId);
@@ -68,8 +99,26 @@ class _BlankScreenState extends State<BlankScreen> {
             changed['movie'], changed['data'], changed['rating'], userId);
       }
     }
-    fetchData();
+    changes = [];
+    storeChanges();
+
     setState(() {});
+  }
+
+  getChanges() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var changesString = prefs.getString('changes');
+    if (changesString != '[]') {
+      changes = List<Map<dynamic, dynamic>>.from(jsonDecode(changesString!));
+    } else {
+      changes = [];
+    }
+    setState(() {});
+  }
+
+  storeChanges() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('changes', jsonEncode(changes));
   }
 
   @override
@@ -77,41 +126,78 @@ class _BlankScreenState extends State<BlankScreen> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text("Movie Recommendations"),
+        title: const Text(
+          "Movie Recommendations",
+        ),
         leading: IconButton(
           onPressed: () async {
-            await Navigator.push(
+            var result = await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ShowRatings(
                   userId: userId,
                   ratings: ratings,
+                  changes: changes,
                 ),
               ),
             );
-            pushNupdate();
+
+            if (result['movies'] != null) {
+              var films = result['movies'];
+              for (var film in films.keys) {
+                for (var movie in movies.keys) {
+                  if (film == movie) {
+                    movies[movie] = films[film];
+                  }
+                }
+              }
+            }
+
+            if (result['changes'] != null) {
+              changes = result['changes'];
+            }
+
+            setState(() {});
+            storeChanges();
+            // pushNupdate();
             // fetchData();
           },
           icon: Icon(Icons.star_border),
         ),
         actions: [
           IconButton(
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Profile(
-                      userId: userId,
-                    ),
+            onPressed: () async {
+              var result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => Profile(
+                    userId: userId,
+                    movies: ratings,
+                    changes: changes,
                   ),
-                );
-              },
-              icon: Icon(Icons.person))
+                ),
+              );
+
+              if (result != null) {
+                for (var film in result.keys) {
+                  for (var movie in movies.keys) {
+                    if (film == movie) {
+                      movies[movie] = result[film];
+                    }
+                  }
+                }
+              }
+
+              setState(() {});
+              storeChanges();
+            },
+            icon: Icon(Icons.person),
+          ),
         ],
       ),
       body: ListView(
         children: [
-          if (changes.length > 0) ...{
+          if (changes.length >= 0) ...{
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(
@@ -169,6 +255,7 @@ class _BlankScreenState extends State<BlankScreen> {
 
                                       movies[movie]['changed'] = false;
 
+                                      storeChanges();
                                       setState(() {});
                                     },
                                     icon: const Icon(Icons.undo),
@@ -260,13 +347,12 @@ class _BlankScreenState extends State<BlankScreen> {
                                             result['rating'];
 
                                         movies[movie]['changed'] = true;
-
-                                        setState(() {});
                                         //movies.remove(movie);
                                         //editRec().rateFilm(movie, movies[movie], result['rating'], userId);
                                       }
 
                                       setState(() {});
+                                      storeChanges();
                                     },
                                     icon: const Icon(Icons.stars),
                                     color: Colors.green,
@@ -291,6 +377,7 @@ class _BlankScreenState extends State<BlankScreen> {
 
                                       movies[movie]['changed'] = true;
                                       setState(() {});
+                                      storeChanges();
                                     },
                                     icon: Icon(Icons.bookmark_add_outlined),
                                   )
@@ -314,6 +401,7 @@ class _BlankScreenState extends State<BlankScreen> {
 
                                       movies[movie]['changed'] = true;
                                       setState(() {});
+                                      storeChanges();
                                     },
                                     icon: const Icon(Icons.close),
                                     color: Colors.red,

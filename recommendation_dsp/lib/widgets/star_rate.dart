@@ -90,8 +90,7 @@ class _StarRatingModalState extends State<StarRatingModal> {
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
               onPressed: () {
-                editRec()
-                    .rateFilm(widget.filmID, widget.filmData, rating, userId);
+                //editRec().rateFilm(widget.filmID, widget.filmData, rating, userId);
                 Navigator.of(context).pop(
                   {
                     "movie": widget.filmID,

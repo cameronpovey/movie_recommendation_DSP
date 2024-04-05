@@ -4,10 +4,18 @@ from datetime import datetime
 from firebase_admin import credentials, db
 from google.cloud import firestore
 
-#linear
+#sklearn
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 import pandas as pd
+
+#tensorflow
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.optimizers import Adam
+import numpy as np
 
 @functions_framework.http
 def startRec(request):
@@ -24,6 +32,9 @@ def startRec(request):
         for id in ratings:
             print(ratings[id]['film_data']['title'], ' - ', ratings[id]['rating'])
             used.append(id)
+
+        if len(used) == 0:
+            return newFilms(used)
 
         #pre-process data
         features = []
@@ -107,8 +118,12 @@ def startRec(request):
         print(df)
         print(rates)
 
-        #Train Model
-        model = RandomForestRegressor(n_estimators=10000, random_state=0, max_depth=None)  # Initialize Random Forest
+        
+
+        # PREDICT NEW RATINGS
+        new_ratings = newFilms(used)
+        new_data = []
+
 
         #New Data
         new_ratings = newFilms(used)
@@ -125,7 +140,7 @@ def startRec(request):
             new_actors_set.update(actors)
 
             crew = [crew['id'] for crew in movie_data['crew']]
-            new_actors_set.update(crew)
+            new_crew_set.update(crew)
             
             genres = movie_data['genre_ids']
             new_genres_set.update(genres)
@@ -191,24 +206,50 @@ def startRec(request):
             if col not in df.columns:
                 df[col] = 0
 
-        df = df.reindex(sorted(df.columns), axis=1)
-        new_df = new_df.reindex(sorted(new_df.columns), axis=1)
 
-        model.fit(df, rates)
 
-        predicted_ratings = model.predict(new_df)
+        #Train Model
+        X_train = df.values
+        y_train = np.array(rates)
+
+        print("y_train shape:", y_train.shape)
+        print("y_train type:", type(y_train))
+
+
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+
+        #Use dropout if poor performance
+        model = Sequential([
+            Dense(32, activation='relu', input_shape=(df.shape[1],)), #input
+            Dropout(0.5),
+            Dense(16, activation='relu'),
+            Dropout(0.5),
+            Dense(8, activation='relu'),
+            Dense(1, activation='linear') #output
+        ])
+
+        model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error', metrics=['mae', 'mse'])
+
+        history = model.fit(X_train_scaled, y_train, batch_size=32, epochs=100, verbose=1,shuffle=False)
+
+
+
+        new_df_scaled = scaler.transform(new_df.values)
+
+        predicted_ratings = model.predict(new_df_scaled)
         print(predicted_ratings)
 
         top_indices = sorted(range(len(predicted_ratings)), key=lambda i: predicted_ratings[i], reverse=True)
 
         # Retrieve the corresponding items and their ratings from the original data
-        top_predictions_with_ratings = [(list(new_ratings.keys())[i], predicted_ratings[i]) for i in top_indices]
+        top_predictions_with_ratings = [(list(new_ratings.keys())[i], predicted_ratings[i][0]) for i in top_indices][:10]
 
-        recc = []
+        recc = {}
 
         # Print the IDs of the top 10 highest rated items
         for movie_id, rating in top_predictions_with_ratings:
-            recc.append(new_ratings[movie_id])
+            recc[movie_id] = new_ratings[movie_id]
             print(new_ratings[movie_id]['title'], rating)
             
         print("------------")

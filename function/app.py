@@ -1,6 +1,9 @@
 from flask import Flask, request
 from ratings import getData  # Import your Cloud Function
-from recc import startRec
+
+from alternatives.reccCONT import startRec
+
+#from recc import startRec
 
 app = Flask(__name__)
 
@@ -13,4 +16,4 @@ def ratings():
     return getData(request)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0' ,port=8080, debug=True)
+    app.run(host='0.0.0.0' ,port=8081, debug=True)

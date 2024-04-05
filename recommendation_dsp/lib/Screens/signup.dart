@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:recommendation_dsp/Screens/home.dart';
-import 'package:recommendation_dsp/Screens/signup.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import './welcome.dart';
 
-class BlankScreenWelcome extends StatefulWidget {
+class SignUpWelcome extends StatefulWidget {
   @override
-  _BlankScreenStateW createState() => _BlankScreenStateW();
+  _SignUpWelcome createState() => _SignUpWelcome();
 }
 
-class _BlankScreenStateW extends State<BlankScreenWelcome> {
+class _SignUpWelcome extends State<SignUpWelcome> {
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
 
@@ -22,9 +20,22 @@ class _BlankScreenStateW extends State<BlankScreenWelcome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Login"),
+        title: Text("Sign Up"),
         centerTitle: true,
-        automaticallyImplyLeading: false,
+        //show a back button
+        automaticallyImplyLeading: true,
+
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => BlankScreenWelcome(),
+              ),
+            );
+          },
+        ),
       ),
       body: Container(
         color: Colors.white,
@@ -34,7 +45,7 @@ class _BlankScreenStateW extends State<BlankScreenWelcome> {
             child: Column(
               children: [
                 const Text(
-                  'Welcome to DSP Movie Recommendation',
+                  'Sign up to DSP Movie Recommendation',
                   style: TextStyle(
                     fontSize: 24.0,
                     fontWeight: FontWeight.bold,
@@ -46,54 +57,30 @@ class _BlankScreenStateW extends State<BlankScreenWelcome> {
                   decoration: InputDecoration(hintText: "Email"),
                 ),
                 TextField(
-                  //obscure text hides the password
                   obscureText: true,
                   controller: password,
                   decoration: InputDecoration(hintText: "Password"),
                 ),
+                //
                 Text(
                   error,
                   style: TextStyle(color: Colors.red),
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    String? userId = await login(email.text, password.text);
-                    debugPrint(userId.toString());
-
-                    if (userId != null) {
-                      SharedPreferences prefs =
-                          await SharedPreferences.getInstance();
-                      prefs.setString('userID', userId);
-
+                    UserCredential? cred =
+                        await signup(email.text, password.text);
+                    if (cred != null) {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => BlankScreen(
-                            userId: userId,
-                          ),
+                          builder: (context) => BlankScreenWelcome(),
                         ),
                       );
                     }
                   },
                   child: Text(
-                    "Login",
-                    style: TextStyle(fontSize: 20),
-                  ),
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SignUpWelcome(),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    "Sign Up ",
+                    "Signup",
                     style: TextStyle(fontSize: 20),
                   ),
                 ),
@@ -105,17 +92,17 @@ class _BlankScreenStateW extends State<BlankScreenWelcome> {
     );
   }
 
-  Future<String?> login(email, password) async {
+  Future<UserCredential?> signup(email, password) async {
     try {
-      UserCredential cred = await _auth.signInWithEmailAndPassword(
+      UserCredential cred = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      print('User signed in successfully.');
-      return cred.user!.uid;
+      print('User registered successfully.');
+      return cred;
     } catch (e) {
       setState(() {
-        error = e.toString().split('] ')[1];
+        error = e.toString();
       });
       return null;
     }

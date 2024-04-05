@@ -7,7 +7,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 //db2view
 class GetData {
   bool fakeData = false;
-  bool local = true;
+  bool local = false;
+
+  String port = '8081';
 
   Future<Map<dynamic, dynamic>> getRecs(userId) async {
     if (fakeData) {
@@ -18,23 +20,12 @@ class GetData {
     late http.Response response;
 
     if (local == true) {
-      if (useTestUser == true) {
-        response =
-            await http.get(Uri.parse('http://192.168.1.120:8080/?id=User111'));
-      } else {
-        response = await http
-            .get(Uri.parse('http://192.168.1.120:8080/?id=${testUser}'));
-      }
+      response = await http
+          .get(Uri.parse('http://192.168.1.105:${port}/?id=${userId}'));
       //local fake user
     } else {
-      if (useTestUser == true) {
-        response = await http.get(Uri.parse(
-            'https://europe-west2-cohesive-memory-342803.cloudfunctions.net/function-1/?id=User111'));
-      } else {
-        //WHEN PASSING ACTUAL USER to FUNCTION
-        response = await http.get(Uri.parse(
-            'https://europe-west2-cohesive-memory-342803.cloudfunctions.net/function-1/?id=${userId}'));
-      }
+      response = await http.get(Uri.parse(
+          'https://europe-west2-cohesive-memory-342803.cloudfunctions.net/function-1/?id=${userId}'));
     }
 
     if (response.statusCode == 200) {
@@ -68,10 +59,6 @@ class GetData {
       },
       onError: (e) => print("Error completing: $e"),
     );
-
-    debugPrint(
-        "\/\//\//\\\/\\/\/\\/\/\/\\/\/\/\/\/\/\/\/\\/\/\/\/\/\/\\/\/\/\/\/");
-    debugPrint(ratings.toString());
 
     return ratings;
   }

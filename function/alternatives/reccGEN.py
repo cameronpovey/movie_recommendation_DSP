@@ -51,7 +51,7 @@ def findGen(genres, used):
         print("top 10")
         count = 0
         for filmid in data.keys():
-            if count == 10:
+            if count == 1000:
                 break
             if filmid in used:
                 continue

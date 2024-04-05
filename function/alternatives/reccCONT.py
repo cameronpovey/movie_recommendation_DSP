@@ -3,6 +3,7 @@ import firebase_admin
 from datetime import datetime
 from firebase_admin import credentials, db
 from google.cloud import firestore
+import random
 
 @functions_framework.http
 def startRec(request):
@@ -14,11 +15,16 @@ def startRec(request):
         ratings = getRatings(request_args['id'])
 
         used = []
+        keys_to_remove = []
         for id in ratings:
+            if ratings[id]['rating'] == 'remove':
+                keys_to_remove.append(id)
+                continue
             print(ratings[id]['film_data']['title'], ' - ', ratings[id]['rating'])
             used.append(id)
 
-        
+        for key in keys_to_remove:
+            del ratings[key]
 
         genres = getGen(ratings)
         gen_W = getAttWeight(genres)
@@ -45,11 +51,15 @@ def startRec(request):
 
         #REDO
         for film in reccs:
+            if 'reccScore' not in reccs[film]:
+                continue
             out['reccs'][film] = {}
             out['reccs'][film]['title'] = reccs[film]['title']
             out['reccs'][film]['genreScore'] = reccs[film]['genreScore']
             
         for movie in ratings:
+            if 'reccScore' not in reccs[film]:
+                continue
             out['rated'][movie] = {}
             out['rated'][movie]['title'] = ratings[movie]['film_data']['title']
             out['rated'][movie]['rating'] = ratings[movie]['rating']
@@ -57,6 +67,17 @@ def startRec(request):
         return reccs
     else:
         return 'ERROR'
+    
+def randomFilms(amount, used, data):
+    filmData = {}
+    pointers = random.sample(range(0, len(data)), amount)
+    for i, film in enumerate(data):
+        if film in used:
+            continue
+        if i in pointers:
+            filmData[film] = data[film]
+    return filmData
+
 
 #rates all movies
 def findScore(rateData, used):
@@ -75,14 +96,17 @@ def findScore(rateData, used):
     years = rateData['years']['data']
     yearWeight = rateData['years']['weight']
 
-    count = 0
-    filmData = {}
     if not firebase_admin._apps:
         cred = credentials.Certificate('serviceKey.json')
         firebase_admin.initialize_app(cred, {'databaseURL': 'https://cohesive-memory-342803-default-rtdb.europe-west1.firebasedatabase.app/'})
 
     ref = db.reference(f'/')
     data = ref.get()
+
+    if len(used) == 0:
+        return randomFilms(len(data), used, data)
+        
+
 
     for filmid in list(data.keys()):
         if filmid in used:
@@ -164,7 +188,7 @@ def findScore(rateData, used):
         factor = (yearWeight * 0.01)
         data[filmid]['yearScore'] = years[filmYear]['avg']*factor
 
-
+    
 
         #diversity
         data[filmid]['diversityScore'] = diversity
@@ -174,10 +198,15 @@ def findScore(rateData, used):
 
     sorted_data = sorted(data.items(), key=lambda item: item[1]['reccScore'], reverse=True)
 
-    output = dict(sorted_data[:20])
+    output = dict(sorted_data[:10])
 
     for recc in output:
         print(output[recc]['title'], ' - GEN:', output[recc]['genreScore'],  ' - ACT:', output[recc]['actorScore'],  ' - CREW:', output[recc]['crewScore'],  ' - KEY:', output[recc]['keywordScore'],  ' - YEAR:', output[recc]['yearScore'],  ' - RECC:', output[recc]['reccScore'])
+
+    #add 10 random films to output
+    ranFilms = randomFilms(5, used, data)
+    output.update(ranFilms)
+
 
     return output
 
@@ -186,7 +215,7 @@ def getAttWeight(area):
     total = 0
     size = 0
     for item in area:
-        if area[item]['size'] > 2:
+        if area[item]['size'] > 0:
             size +=1
             total += area[item]['avg']
             common[item] = area[item]
@@ -405,8 +434,6 @@ def getGen(ratings):
     return genres
 
 def fillin(years):
-    low = min(years.keys())
-    high = max(years.keys())
 
     for year in range(1900, 2030):
         if year not in years:

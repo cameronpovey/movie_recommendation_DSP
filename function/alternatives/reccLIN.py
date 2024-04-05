@@ -125,7 +125,7 @@ def startRec(request):
             new_actors_set.update(actors)
 
             crew = [crew['id'] for crew in movie_data['crew']]
-            new_actors_set.update(crew)
+            new_crew_set.update(crew)
             
             genres = movie_data['genre_ids']
             new_genres_set.update(genres)
@@ -202,13 +202,13 @@ def startRec(request):
         top_indices = sorted(range(len(predicted_ratings)), key=lambda i: predicted_ratings[i], reverse=True)
 
         # Retrieve the corresponding items and their ratings from the original data
-        top_predictions_with_ratings = [(list(new_ratings.keys())[i], predicted_ratings[i]) for i in top_indices]
+        top_predictions_with_ratings = [(list(new_ratings.keys())[i], predicted_ratings[i]) for i in top_indices][:10]
 
-        recc = []
+        recc = {}
 
         # Print the IDs of the top 10 highest rated items
         for movie_id, rating in top_predictions_with_ratings:
-            recc.append(new_ratings[movie_id])
+            recc[movie_id] = new_ratings[movie_id]
             print(new_ratings[movie_id]['title'], rating)
             
         print("------------")

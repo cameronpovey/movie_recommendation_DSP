@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 //used for view2db
@@ -22,6 +21,12 @@ class editRec {
     FirebaseFirestore firestore = FirebaseFirestore.instance;
     DocumentReference newDoc = firestore.doc('Users/${userId}/Ratings/${film}');
     await newDoc.set({'rating': rating});
+  }
+
+  void removeRating(film, userId) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    DocumentReference newDoc = firestore.doc('Users/${userId}/Ratings/${film}');
+    await newDoc.delete();
   }
 }
 //have undo for a bit in home
